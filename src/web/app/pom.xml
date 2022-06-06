@@ -164,6 +164,12 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+
+      <groupId>org.geoserver.security</groupId>
+      <artifactId>gs-sec-keycloak</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.geotools.jdbc</groupId>
       <artifactId>gt-jdbc-postgis</artifactId>
     </dependency>
@@ -1308,7 +1314,7 @@
         </dependency>
       </dependencies>
     </profile>
-    <profile>
+    <!-- <profile>
       <id>keycloak</id>
       <dependencies>
         <dependency>
@@ -1317,7 +1323,7 @@
           <version>${project.version}</version>
         </dependency>
       </dependencies>
-    </profile>
+    </profile> -->
     <profile>
       <id>oauth2-google</id>
       <dependencies>

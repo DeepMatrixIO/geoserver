@@ -23,6 +23,7 @@
     <module>security-tests</module>
     <module>jdbc</module>
     <module>ldap</module>
+    <module>keycloak</module>
   </modules>
 
   <dependencies>
