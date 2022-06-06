@@ -15,7 +15,7 @@
     <version>2.22-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.geoserver</groupId>
+  <groupId>org.geoserver.security</groupId>
   <artifactId>gs-sec-keycloak</artifactId>
   <packaging>jar</packaging>
   <name>GeoServer Keycloak Security Plugin</name>
