@@ -181,11 +181,11 @@
       <artifactId>gs-sec-oauth2-openid-connect</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
+    <!-- <dependency>
       <groupId>org.geoserver.community</groupId>
       <artifactId>gs-sec-keycloak</artifactId>
       <version>${project.version}</version>
-    </dependency>
+    </dependency> -->
     <dependency>
       <groupId>org.geoserver.community</groupId>
       <artifactId>gs-saml</artifactId>
@@ -371,11 +371,11 @@
       <artifactId>gs-gsr</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
+    <!-- <dependency>
       <groupId>org.geoserver.community</groupId>
       <artifactId>gs-cog</artifactId>
       <version>${project.version}</version>
-    </dependency>
+    </dependency> -->
     <dependency>
       <groupId>org.geoserver.community</groupId>
       <artifactId>gs-smart-data-loader</artifactId>

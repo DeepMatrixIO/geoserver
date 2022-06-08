@@ -9,11 +9,11 @@
 
   <parent>
     <groupId>org.geoserver</groupId>
-    <artifactId>community</artifactId>
+    <artifactId>geoserver</artifactId>
     <version>2.22-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.geoserver.community</groupId>
+  <groupId>org.geoserver</groupId>
   <artifactId>gs-cog</artifactId>
   <packaging>jar</packaging>
   <name>COG support module</name>

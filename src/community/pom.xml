@@ -71,7 +71,7 @@
             <descriptor>release/ext-taskmanager-core.xml</descriptor>
             <descriptor>release/ext-taskmanager-s3.xml</descriptor>
             <descriptor>release/ext-netcdf-ghrsst.xml</descriptor>
-            <descriptor>release/ext-cog.xml</descriptor>
+            <!-- <descriptor>release/ext-cog.xml</descriptor> -->
             <descriptor>release/ext-s3-geotiff.xml</descriptor>
             <descriptor>release/ext-wmts-styles.xml</descriptor>
             <descriptor>release/ext-ogr-datastore.xml</descriptor>
@@ -245,7 +245,7 @@
         <module>importer-jdbc</module>
         <module>features-templating</module>
         <module>gsr</module>
-        <module>cog</module>
+        <!-- <module>cog</module> -->
         <module>cov-json</module>
         <module>smart-data-loader</module>
         <module>rest-openapi</module>
@@ -549,12 +549,12 @@
         <module>netcdf-ghrsst</module>
       </modules>
     </profile>
-    <profile>
+    <!-- <profile>
       <id>cog</id>
       <modules>
         <module>cog</module>
       </modules>
-    </profile>
+    </profile> -->
     <profile>
       <id>cov-json</id>
       <modules>
