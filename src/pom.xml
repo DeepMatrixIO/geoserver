@@ -40,6 +40,7 @@
     <module>ows</module>
     <module>gwc</module>
     <module>rest</module>
+    <module>cog</module>
     <module>restconfig</module>
     <module>restconfig-wcs</module>
     <module>restconfig-wfs</module>
@@ -300,6 +301,11 @@
         <groupId>org.geotools</groupId>
         <artifactId>gt-imagepyramid</artifactId>
         <version>${gt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-cog</artifactId>
+        <version>${gs.version}</version>
       </dependency>
       <dependency>
         <groupId>org.geotools</groupId>
@@ -1662,6 +1668,7 @@
             <descriptor>release/ext-mysql.xml</descriptor>
             <descriptor>release/ext-oracle.xml</descriptor>
             <descriptor>release/ext-pyramid.xml</descriptor>
+            <descriptor>release/ext-cog.xml</descriptor>
             <descriptor>release/ext-gdal.xml</descriptor>
             <descriptor>release/ext-h2.xml</descriptor>
             <descriptor>release/ext-sqlserver.xml</descriptor>

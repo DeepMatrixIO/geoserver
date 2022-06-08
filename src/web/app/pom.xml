@@ -164,10 +164,19 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-
       <groupId>org.geoserver.security</groupId>
       <artifactId>gs-sec-keycloak</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-imagepyramid</artifactId>
+      <!-- <version>${gt.version}</version> -->
+    </dependency>
+    <dependency>
+      <groupId>org.geoserver</groupId>
+      <artifactId>gs-cog</artifactId>
+      <!-- <version>${gs.version}</version> -->
     </dependency>
     <dependency>
       <groupId>org.geotools.jdbc</groupId>
@@ -562,7 +571,7 @@
         </dependency>
       </dependencies>
     </profile>
-    <profile>
+    <!-- <profile>
       <id>pyramid</id>
       <dependencies>
         <dependency>
@@ -571,7 +580,7 @@
           <version>${gt.version}</version>
         </dependency>
       </dependencies>
-    </profile>
+    </profile> -->
     <profile>
       <id>charts</id>
       <dependencies>
@@ -1731,7 +1740,7 @@
         </dependency>
       </dependencies>
     </profile>
-    <profile>
+    <!-- <profile>
       <id>cog</id>
       <dependencies>
         <dependency>
@@ -1740,7 +1749,7 @@
           <version>${gs.version}</version>
         </dependency>
       </dependencies>
-    </profile>
+    </profile> -->
     <profile>
       <id>cov-json</id>
       <dependencies>
