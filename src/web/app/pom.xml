@@ -174,14 +174,6 @@
       <!-- <version>${gt.version}</version> -->
     </dependency>
     <dependency>
-<<<<<<< HEAD
-=======
-      <groupId>org.geoserver</groupId>
-      <artifactId>gs-cog</artifactId>
-      <!-- <version>${gs.version}</version> -->
-    </dependency>
-    <dependency>
->>>>>>> afc7243eb760e915c7807546931b4cba328c040c
       <groupId>org.geotools.jdbc</groupId>
       <artifactId>gt-jdbc-postgis</artifactId>
     </dependency>
