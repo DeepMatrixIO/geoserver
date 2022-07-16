@@ -144,7 +144,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
                 GeoServerLogoutFilter.LOGOUT_REDIRECT_ATTR,
                 deployment
                         .getLogoutUrl()
-                        .queryParam("post_logout_redirect_uri", refererNoParams)
+                        .queryParam(OAuth2Constants.REDIRECT_URI, refererNoParams)
                         .build()
                         .toString());
     }
@@ -209,7 +209,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
         // perform the authentication operation
         AuthOutcome result = authenticator.authenticate();
         AuthChallenge challenge = authenticator.getChallenge();
-        LOG.log(Level.FINE, () -> "auth result is " + result.toString());
+        LOG.log(Level.INFO, () -> "auth result is " + result.toString());
         Authentication authn = null;
         switch (result) {
             case AUTHENTICATED:
@@ -245,13 +245,13 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
             String cacheKey = getCacheKey(request);
             if (mgr != null && cacheKey != null && !cacheKey.isEmpty()) {
                 if (authn != null) {
-                    LOG.log(Level.FINE, () -> "cachinig auth for " + authn.getName());
+                    LOG.log(Level.INFO, () -> "cachinig auth for " + authn.getName());
                 }
                 mgr.getAuthenticationCache().put(getName(), cacheKey, authn);
             }
             // set the auth in the context
             if (authn != null) {
-                LOG.log(Level.FINE, "adding auth to context");
+                LOG.log(Level.INFO, "adding auth to context");
             }
             SecurityContextHolder.getContext().setAuthentication(authn);
         } else {
@@ -273,7 +273,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
         // get auth from context
         Authentication contextAuthn = SecurityContextHolder.getContext().getAuthentication();
         if (contextAuthn != null && contextAuthn.isAuthenticated()) {
-            LOG.log(Level.FINE, "auth already exists in context");
+            LOG.log(Level.INFO, "auth already exists in context");
             return new AuthResults(contextAuthn);
         }
         // get auth from cache
@@ -282,7 +282,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
         if (mgr != null && cacheKey != null && !cacheKey.isEmpty()) {
             Authentication authn = mgr.getAuthenticationCache().get(getName(), cacheKey);
             if (authn != null) {
-                LOG.log(Level.FINE, () -> "auth located in cache for " + authn.getName());
+                LOG.log(Level.INFO, () -> "auth located in cache for " + authn.getName());
                 return new AuthResults(authn);
             }
         }
