@@ -287,7 +287,7 @@ public class KeycloakRoleService extends AbstractGeoServerSecurityService
         HttpPost httpPost =
                 new HttpPost(
                         this.serverURL
-                                + "/auth/realms/"
+                                + "/realms/"
                                 + this.realm
                                 + "/protocol/openid-connect/token");
         String body =
@@ -327,7 +327,7 @@ public class KeycloakRoleService extends AbstractGeoServerSecurityService
         HttpGet httpGet =
                 new HttpGet(
                         this.serverURL
-                                + "/auth/admin/realms/"
+                                + "/admin/realms/"
                                 + this.realm
                                 + "/clients/"
                                 + this.idOfClient
