@@ -144,7 +144,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
                 GeoServerLogoutFilter.LOGOUT_REDIRECT_ATTR,
                 deployment
                         .getLogoutUrl()
-                        .queryParam(OAuth2Constants.REDIRECT_URI, refererNoParams)
+                        .queryParam("post_logout_redirect_uri", refererNoParams)
                         .build()
                         .toString());
     }
