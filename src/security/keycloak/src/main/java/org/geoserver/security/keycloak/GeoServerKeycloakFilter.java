@@ -71,7 +71,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
 
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
-        LOG.log(Level.FINER, "GeoServerKeycloakFilter.initializeFromConfig ENTRY");
+        LOG.log(Level.INFO, "GeoServerKeycloakFilter.initializeFromConfig ENTRY");
         super.initializeFromConfig(config);
         GeoServerKeycloakFilterConfig keycloakConfig = (GeoServerKeycloakFilterConfig) config;
         KeycloakDeployment deployment =
@@ -99,9 +99,9 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
     protected void doFilter(
             HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        LOG.log(Level.FINER, "GeoServerKeycloakFilter.doFilter ENTRY");
-        LOG.log(Level.FINEST, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        logHttpRequest(Level.FINEST, request);
+        LOG.log(Level.INFO, "GeoServerKeycloakFilter.doFilter ENTRY");
+        LOG.log(Level.INFO, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        logHttpRequest(Level.INFO, request);
         // get auth from the context or cache
         AuthResults authResults = loadAuthn(request);
         // if the cache failed, then attempt auth normally
@@ -116,12 +116,12 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
                 GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, authResults);
 
         // if successful, then continue the chain
-        LOG.log(Level.FINER, "continuing filter chain");
-        LOG.log(Level.FINEST, chain.getClass().getCanonicalName());
+        LOG.log(Level.INFO, "continuing filter chain");
+        LOG.log(Level.INFO, chain.getClass().getCanonicalName());
 
         chain.doFilter(request, response);
-        logHttpResponse(Level.FINEST, response);
-        LOG.log(Level.FINEST, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        logHttpResponse(Level.INFO, response);
+        LOG.log(Level.INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     }
 
     /** Helper for setting up GeoServer-style logout actions. */
@@ -130,7 +130,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication) {
-        LOG.log(Level.FINER, "GeoServerKeycloakFilter.logout ENTRY");
+        LOG.log(Level.INFO, "GeoServerKeycloakFilter.logout ENTRY");
         // do some setup and get the deployment
         HttpFacade exchange = new SimpleHttpFacade(request, response);
         KeycloakDeployment deployment = keycloakContext.resolveDeployment(exchange);
@@ -157,7 +157,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
         // session is already acting as our cache
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && !authHeader.isEmpty()) {
-            LOG.log(Level.FINEST, () -> "cache key = " + authHeader);
+            LOG.log(Level.INFO, () -> "cache key = " + authHeader);
             return authHeader;
         }
         return null;
@@ -183,7 +183,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
      * @return the credentials or challenge for credentials
      */
     protected AuthResults getNewAuthn(HttpServletRequest request, HttpServletResponse response) {
-        LOG.log(Level.FINER, "GeoServerKeycloakFilter.getNewAuthn ENTRY");
+        LOG.log(Level.INFO, "GeoServerKeycloakFilter.getNewAuthn ENTRY");
         // do some setup and create the authenticator
         request =
                 new HttpServletRequestWrapper(request) {
@@ -237,7 +237,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
      * @param authn the value to cache
      */
     protected void saveAuthn(HttpServletRequest request, AuthResults authResults) {
-        LOG.log(Level.FINER, "GeoServerKeycloakFilter.cacheAuthn ENTRY");
+        LOG.log(Level.INFO, "GeoServerKeycloakFilter.cacheAuthn ENTRY");
         if (authResults != null && authResults.hasAuthentication()) {
             Authentication authn = authResults.getAuthentication();
             // set the auth in the cache
@@ -269,7 +269,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
      * @return the corresponding value from the cache, or {@code null} if unavailable
      */
     protected AuthResults loadAuthn(HttpServletRequest request) {
-        LOG.log(Level.FINER, "GeoServerKeycloakFilter.getCachedAuthn ENTRY");
+        LOG.log(Level.INFO, "GeoServerKeycloakFilter.getCachedAuthn ENTRY");
         // get auth from context
         Authentication contextAuthn = SecurityContextHolder.getContext().getAuthentication();
         if (contextAuthn != null && contextAuthn.isAuthenticated()) {
