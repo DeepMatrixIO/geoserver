@@ -92,7 +92,7 @@
       <artifactId>gt-imagepyramid</artifactId>
       <version>${gt.version}</version>
     </dependency>
-         <dependency>
+    <dependency>
       <groupId>org.geoserver.extension</groupId>
       <artifactId>gs-css</artifactId>
       <version>${gt.version}</version>
