@@ -5,9 +5,12 @@
 package org.geoserver.security.keycloak;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.geotools.util.logging.Logging;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.adapters.spi.AuthChallenge;
 import org.keycloak.adapters.springsecurity.account.SimpleKeycloakAccount;
@@ -23,6 +26,11 @@ import org.springframework.security.web.AuthenticationEntryPoint;
  * order to obtain them.
  */
 class AuthResults implements AuthenticationEntryPoint {
+
+    private static final Logger LOG = Logging.getLogger(AuthResults.class);
+
+    /** Request attribute: why the request did not authenticate (set by the filter). */
+    static final String FAILURE_REASON = AuthResults.class.getName() + ".reason";
 
     private final Authentication authentication;
     private final AuthChallenge challenge;
@@ -104,7 +112,41 @@ class AuthResults implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException authException)
             throws IOException, ServletException {
-        challenge(request, response);
+        boolean challenged = challenge(request, response);
+        // Only refused requests get here: one INFO line each, never the token or query string.
+        if (authentication == null && LOG.isLoggable(Level.INFO)) {
+            Object reason = request.getAttribute(FAILURE_REASON);
+            String action = (challenged ? "challenged" : "refused") + " (" + response.getStatus() + ")";
+            LOG.info(
+                    "unauthenticated "
+                            + clean(request.getMethod())
+                            + " "
+                            + clean(request.getRequestURI())
+                            + " from "
+                            + clean(clientAddress(request))
+                            + ": "
+                            + action
+                            + ", "
+                            + (reason != null ? reason : "no authentication"));
+        }
+    }
+
+    /** The first X-Forwarded-For hop (the webserver proxies GeoServer), else the peer. */
+    private static String clientAddress(HttpServletRequest request) {
+        String fwd = request.getHeader("X-Forwarded-For");
+        if (fwd != null && !fwd.trim().isEmpty()) {
+            return fwd.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /** No line breaks or control characters from the request in the log. */
+    private static String clean(String value) {
+        if (value == null) {
+            return "-";
+        }
+        String v = value.replaceAll("[\\p{Cntrl}]", "_");
+        return v.length() > 300 ? v.substring(0, 300) + "..." : v;
     }
 
     public Authentication getAuthentication() {

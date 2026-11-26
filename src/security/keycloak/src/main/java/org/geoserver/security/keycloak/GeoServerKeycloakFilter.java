@@ -37,6 +37,8 @@ import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticatio
 import org.keycloak.adapters.springsecurity.authentication.SpringSecurityRequestAuthenticator;
 import org.keycloak.adapters.springsecurity.facade.SimpleHttpFacade;
 import org.keycloak.adapters.springsecurity.token.SpringSecurityAdapterTokenStoreFactory;
+import org.keycloak.jose.jws.JWSInput;
+import org.keycloak.representations.AccessToken;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
@@ -71,7 +73,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
 
     @Override
     public void initializeFromConfig(SecurityNamedServiceConfig config) throws IOException {
-        LOG.log(Level.INFO, "GeoServerKeycloakFilter.initializeFromConfig ENTRY");
+        LOG.log(Level.FINER, "GeoServerKeycloakFilter.initializeFromConfig ENTRY");
         super.initializeFromConfig(config);
         GeoServerKeycloakFilterConfig keycloakConfig = (GeoServerKeycloakFilterConfig) config;
         KeycloakDeployment deployment =
@@ -99,9 +101,9 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
     protected void doFilter(
             HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        LOG.log(Level.INFO, "GeoServerKeycloakFilter.doFilter ENTRY");
-        LOG.log(Level.INFO, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        logHttpRequest(Level.INFO, request);
+        LOG.log(Level.FINER, "GeoServerKeycloakFilter.doFilter ENTRY");
+        LOG.log(Level.FINEST, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        logHttpRequest(Level.FINEST, request);
         // get auth from the context or cache
         AuthResults authResults = loadAuthn(request);
         // if the cache failed, then attempt auth normally
@@ -116,12 +118,12 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
                 GeoServerSecurityFilter.AUTHENTICATION_ENTRY_POINT_HEADER, authResults);
 
         // if successful, then continue the chain
-        LOG.log(Level.INFO, "continuing filter chain");
-        LOG.log(Level.INFO, chain.getClass().getCanonicalName());
+        LOG.log(Level.FINER, "continuing filter chain");
+        LOG.log(Level.FINEST, chain.getClass().getCanonicalName());
 
         chain.doFilter(request, response);
-        logHttpResponse(Level.INFO, response);
-        LOG.log(Level.INFO, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        logHttpResponse(Level.FINEST, response);
+        LOG.log(Level.FINEST, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     }
 
     /** Helper for setting up GeoServer-style logout actions. */
@@ -130,7 +132,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication) {
-        LOG.log(Level.INFO, "GeoServerKeycloakFilter.logout ENTRY");
+        LOG.log(Level.FINER, "GeoServerKeycloakFilter.logout ENTRY");
         // do some setup and get the deployment
         HttpFacade exchange = new SimpleHttpFacade(request, response);
         KeycloakDeployment deployment = keycloakContext.resolveDeployment(exchange);
@@ -157,7 +159,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
         // session is already acting as our cache
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && !authHeader.isEmpty()) {
-            LOG.log(Level.INFO, () -> "cache key = " + authHeader);
+            LOG.log(Level.FINEST, () -> "cache key = " + redactAuthorization(authHeader));
             return authHeader;
         }
         return null;
@@ -183,7 +185,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
      * @return the credentials or challenge for credentials
      */
     protected AuthResults getNewAuthn(HttpServletRequest request, HttpServletResponse response) {
-        LOG.log(Level.INFO, "GeoServerKeycloakFilter.getNewAuthn ENTRY");
+        LOG.log(Level.FINER, "GeoServerKeycloakFilter.getNewAuthn ENTRY");
         // do some setup and create the authenticator
         request =
                 new HttpServletRequestWrapper(request) {
@@ -209,7 +211,12 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
         // perform the authentication operation
         AuthOutcome result = authenticator.authenticate();
         AuthChallenge challenge = authenticator.getChallenge();
-        LOG.log(Level.INFO, () -> "auth result is " + result.toString());
+        LOG.log(Level.FINE, () -> "auth result is " + result.toString());
+        // why this request has no authentication; AuthResults.commence logs it at INFO
+        // if the request is then refused
+        if (result != AuthOutcome.AUTHENTICATED) {
+            request.setAttribute(AuthResults.FAILURE_REASON, describeFailure(result, request));
+        }
         Authentication authn = null;
         switch (result) {
             case AUTHENTICATED:
@@ -237,7 +244,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
      * @param authn the value to cache
      */
     protected void saveAuthn(HttpServletRequest request, AuthResults authResults) {
-        LOG.log(Level.INFO, "GeoServerKeycloakFilter.cacheAuthn ENTRY");
+        LOG.log(Level.FINER, "GeoServerKeycloakFilter.cacheAuthn ENTRY");
         if (authResults != null && authResults.hasAuthentication()) {
             Authentication authn = authResults.getAuthentication();
             // set the auth in the cache
@@ -245,13 +252,13 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
             String cacheKey = getCacheKey(request);
             if (mgr != null && cacheKey != null && !cacheKey.isEmpty()) {
                 if (authn != null) {
-                    LOG.log(Level.INFO, () -> "cachinig auth for " + authn.getName());
+                    LOG.log(Level.FINE, () -> "cachinig auth for " + authn.getName());
                 }
                 mgr.getAuthenticationCache().put(getName(), cacheKey, authn);
             }
             // set the auth in the context
             if (authn != null) {
-                LOG.log(Level.INFO, "adding auth to context");
+                LOG.log(Level.FINE, "adding auth to context");
             }
             SecurityContextHolder.getContext().setAuthentication(authn);
         } else {
@@ -269,11 +276,11 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
      * @return the corresponding value from the cache, or {@code null} if unavailable
      */
     protected AuthResults loadAuthn(HttpServletRequest request) {
-        LOG.log(Level.INFO, "GeoServerKeycloakFilter.getCachedAuthn ENTRY");
+        LOG.log(Level.FINER, "GeoServerKeycloakFilter.getCachedAuthn ENTRY");
         // get auth from context
         Authentication contextAuthn = SecurityContextHolder.getContext().getAuthentication();
         if (contextAuthn != null && contextAuthn.isAuthenticated()) {
-            LOG.log(Level.INFO, "auth already exists in context");
+            LOG.log(Level.FINE, "auth already exists in context");
             return new AuthResults(contextAuthn);
         }
         // get auth from cache
@@ -282,7 +289,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
         if (mgr != null && cacheKey != null && !cacheKey.isEmpty()) {
             Authentication authn = mgr.getAuthenticationCache().get(getName(), cacheKey);
             if (authn != null) {
-                LOG.log(Level.INFO, () -> "auth located in cache for " + authn.getName());
+                LOG.log(Level.FINE, () -> "auth located in cache for " + authn.getName());
                 return new AuthResults(authn);
             }
         }
@@ -295,13 +302,10 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
             LOG.log(level, "request.uri      = " + request.getRequestURI());
             LOG.log(level, "request.headers  = ");
             for (String headerName : Collections.list(request.getHeaderNames())) {
-                if (headerName == HttpHeaders.COOKIE) {
-                    continue;
-                }
                 StringBuilder buffer = new StringBuilder(80);
                 buffer.append(leftPadMessage(headerName)).append(headerName).append(" = ");
                 for (String headerValue : Collections.list(request.getHeaders(headerName))) {
-                    buffer.append(headerValue).append(' ');
+                    buffer.append(redactHeader(headerName, headerValue)).append(' ');
                 }
                 LOG.log(level, buffer.toString());
             }
@@ -310,7 +314,8 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
                 StringBuilder buffer = new StringBuilder(80);
                 buffer.append(leftPadMessage(queryKey)).append(queryKey).append(" = ");
                 for (String queryValue : request.getParameterValues(queryKey)) {
-                    buffer.append(queryValue).append(' ');
+                    buffer.append(isSensitiveParam(queryKey) ? REDACTED : queryValue)
+                            .append(' ');
                 }
                 LOG.log(level, buffer.toString());
             }
@@ -321,7 +326,7 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
                     buffer.append(leftPadMessage(cookie.getName()))
                             .append(cookie.getName())
                             .append(" = ")
-                            .append(cookie.getValue())
+                            .append(REDACTED)
                             .append("; ")
                             .append(cookie.getPath());
                     LOG.log(level, buffer.toString());
@@ -335,29 +340,91 @@ public class GeoServerKeycloakFilter extends GeoServerSecurityFilter
             LOG.log(level, "response.status  = " + response.getStatus());
             LOG.log(level, "response.headers = ");
             for (String headerName : response.getHeaderNames()) {
-                if (headerName == HttpHeaders.SET_COOKIE) {
+                if (HttpHeaders.SET_COOKIE.equalsIgnoreCase(headerName)) {
                     continue;
                 }
                 StringBuilder buffer = new StringBuilder(80);
                 buffer.append(leftPadMessage(headerName)).append(headerName).append(" = ");
                 for (String headerValue : response.getHeaders(headerName)) {
-                    buffer.append(headerValue).append(' ');
+                    buffer.append(redactHeader(headerName, headerValue)).append(' ');
                 }
                 LOG.log(level, buffer.toString());
             }
             LOG.log(level, "response.cookies = ");
             for (String cookie : response.getHeaders(HttpHeaders.SET_COOKIE)) {
                 int split = cookie.indexOf('=');
-                String cookieName = cookie.substring(0, split);
-                String cookieValue = cookie.substring(split + 1);
+                String cookieName = split < 0 ? cookie : cookie.substring(0, split);
                 StringBuilder buffer = new StringBuilder(80);
                 buffer.append(leftPadMessage(cookieName))
                         .append(cookieName)
                         .append(" = ")
-                        .append(cookieValue);
+                        .append(REDACTED);
                 LOG.log(level, buffer.toString());
             }
         }
+    }
+
+    private static final String REDACTED = "<redacted>";
+
+    /**
+     * A short, token-free reason for a request that did not authenticate. The token is decoded
+     * without verification, only to tell an expired token from one that failed verification.
+     */
+    static String describeFailure(AuthOutcome result, HttpServletRequest request) {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (header == null || header.trim().isEmpty()) {
+            return "no bearer token";
+        }
+        if (!header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            return "no bearer token (Authorization: " + redactAuthorization(header) + ")";
+        }
+        try {
+            AccessToken token =
+                    new JWSInput(header.substring(7).trim()).readJsonContent(AccessToken.class);
+            int exp = token.getExpiration();
+            if (exp > 0 && token.isExpired()) {
+                return "bearer token expired at " + java.time.Instant.ofEpochSecond(exp);
+            }
+            return "bearer token rejected (not expired: signature, issuer, audience or realm key)";
+        } catch (Exception e) {
+            return "malformed bearer token";
+        }
+    }
+
+    /** Headers whose values are credentials: never logged, at any level. */
+    private static boolean isSensitiveHeader(String name) {
+        return HttpHeaders.AUTHORIZATION.equalsIgnoreCase(name)
+                || HttpHeaders.PROXY_AUTHORIZATION.equalsIgnoreCase(name)
+                || HttpHeaders.COOKIE.equalsIgnoreCase(name)
+                || HttpHeaders.SET_COOKIE.equalsIgnoreCase(name)
+                || "x-auth-token".equalsIgnoreCase(name)
+                || "x-access-token".equalsIgnoreCase(name);
+    }
+
+    /** Query parameters that can carry a token or password (the adapter accepts access_token). */
+    private static boolean isSensitiveParam(String name) {
+        String n = name.toLowerCase(java.util.Locale.ROOT);
+        return n.contains("token") || n.contains("password") || n.contains("secret")
+                || n.equals("code") || n.equals("authkey");
+    }
+
+    private static String redactHeader(String name, String value) {
+        if (!isSensitiveHeader(name)) {
+            return value;
+        }
+        return HttpHeaders.AUTHORIZATION.equalsIgnoreCase(name)
+                        || HttpHeaders.PROXY_AUTHORIZATION.equalsIgnoreCase(name)
+                ? redactAuthorization(value)
+                : REDACTED;
+    }
+
+    /** Keeps the scheme ("Bearer", "Basic") so the log still says what kind of auth arrived. */
+    private static String redactAuthorization(String value) {
+        if (value == null) {
+            return null;
+        }
+        int space = value.indexOf(' ');
+        return (space > 0 ? value.substring(0, space) + " " : "") + REDACTED;
     }
 
     private static String leftPadMessage(String message) {
